@@ -11,6 +11,9 @@
 # production
 /build
 /public/fontawesome
+/src/useful/Demo.js
+/src/useful/hold.html
+/src/useful/fire_sdk.js
 
 # misc
 .DS_Store

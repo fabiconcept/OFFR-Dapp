@@ -25,13 +25,13 @@ const ToAddress = () => {
         setCurrentPage(3);
     }
 
-
     return (
         <div className="div-carosel">
+            <label>Enter Wallet Address</label>
             <div className="flex-form">
                 <div className="inp-box">
-                    <input type="text" name="address" ref={inputRef} onChange={(e)=>setTo(e.target.value)} value={to} placeholder='To: 0x000' className="inp" />
-                    {!canProceed && <div className="btnx" onClick={()=>pasteClipboard(inputRef.current)}>paste</div>}
+                    <input type="text" name="address" ref={inputRef} onChange={(e)=>setTo(String(e.target.value).trim())} value={to} placeholder='To: 0x000' className="inp" />
+                    {!canProceed && <div className="btnx" onClick={()=>pasteClipboard(setTo)}>paste</div>}
                     {canProceed && <div className="btnx" onClick={proceedHandler}>send</div>}
                 </div>
                 <br />

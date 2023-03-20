@@ -1,4 +1,14 @@
+@media screen and (max-height: 700px) {
+    *{
+        font-size: 16px;
+    }
+}
+
 @media screen and (max-width: 1025px) {
+    .dash_section .grid-system{
+        margin-top: 1rem;
+    }
+
     .login main .formPart {
         padding: 2rem;
         justify-content: center;
@@ -26,6 +36,10 @@
 }
 
 @media screen and (max-width: 600px) {
+    *{
+        font-size: 14px;
+    }
+
     .login main .formPart .form-g {
         margin: 1rem 0;
         font-size: .8rem;
@@ -100,10 +114,10 @@
 
     .mbNav {
         display: grid;
-        grid-template-columns: 1fr 1fr 1fr 1fr;
-        position: absolute;
+        grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+        position: fixed;
         bottom: 0;
-        z-index: 999999;
+        z-index: 9999999999;
         background-color: var(--main-blue);
         left: 0;
         overflow: hidden;
@@ -141,8 +155,61 @@
     }
 
     .mbNav .tab img {
-        width: 5.5vmin;
+        width: 4vmin;
         object-fit: contain;
         filter: invert(1);
+    }
+
+    .dash_section .dash-row > .action-card{
+        grid-template-columns: 1fr;
+        place-items: center;
+    }
+
+    .dash_section .dash-row .action-card>.img {
+        display: none;
+        align-items: center;
+        justify-content: left;
+        padding: 1rem 2rem;
+    }
+
+    .dash_section .dash-row .action-card>.img img {
+        max-width: unset;
+        width: unset;
+        height: 5rem;
+        object-fit: contain;
+    }
+
+    
+    .dash_section .dash-row .action-card > .txt{
+        all: unset;
+        display: flex;
+        font-size: x-small;
+        flex-direction: column;
+        gap: 10px;
+        justify-content: center;
+    }
+    
+    .btnx-row .btnx.disable {
+        display: none;
+    }
+    .dash-row .div-4 div {
+        width: 22rem;
+    }
+
+    .dash-row .div-3 div {
+        width: 22rem;
+    }
+
+    .dash-row .div-2 div {
+        width: 22rem;
+    }
+
+    .dash-row .div-1 div {
+        width: 22rem;
+    }
+    
+    .kard .value.address {
+        max-width: 20.5rem;
+        overflow: hidden;
     }
 }

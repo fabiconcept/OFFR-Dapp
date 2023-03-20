@@ -17,7 +17,7 @@ const Mobile_navBar = () => {
           case "wallet":
             setNavPosition(1);
             break;
-          case "transactions":
+          case "owner":
             setNavPosition(2);
             break;
           case "settings":
@@ -33,7 +33,8 @@ const Mobile_navBar = () => {
         <div className="mbNav">
             <Link to={'/dashboard'}><div className={`tab ${navPosition === 0 && "active"}`}><img src="https://gineousc.sirv.com/Images/icons/home.svg" alt="" /></div></Link>
             <Link to={'/dashboard/wallet'}><div className={`tab ${navPosition === 1 && "active"}`}><img src="https://gineousc.sirv.com/Images/icons/usd-circle.svg" alt="" /></div></Link>
-            <Link to={'/dashboard/transactions'}><div className={`tab ${navPosition === 2 && "active"}`}><img src="https://gineousc.sirv.com/Images/icons/list-alt.svg" alt="" /></div></Link>
+            <Link to={'/dashboard/owner'}><div className={`tab ${navPosition === 2 && "active"}`}><img src="https://gineousc.sirv.com/Images/icons/list-alt.svg" alt="" /></div></Link>
+            <Link to={'/dashboard/dividend'}><div className={`tab ${navPosition === 3 && "active"}`}><img src="https://gineousc.sirv.com/Images/icons/list-alt.svg" alt="" /></div></Link>
             <Link to={'/dashboard/settings'}><div className={`tab ${navPosition === 4 && "active"}`}><img src="https://gineousc.sirv.com/Images/icons/set.png" alt="" /></div></Link>
         </div>
     )

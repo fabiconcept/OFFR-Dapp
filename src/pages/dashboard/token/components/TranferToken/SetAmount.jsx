@@ -107,6 +107,7 @@ const SetAmount = () => {
                     </div>
                 </div>}
                 <div className="offr"></div>
+                <label>Enter Amount</label>
                 <div className="screen">
                     <div className={`num`} data-symbol={` ${coinInfo && coinInfo?.symbol}`}><span>{moneyFormat(scr)}</span></div>
                 </div>

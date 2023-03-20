@@ -13,7 +13,7 @@ let getWeb3 = new Promise(async function (resolve, reject) {
     resolve({
       injectedWeb3: provider.isConnected(),
       web3() {
-        return new Web3(provider)
+        return new Web3(provider);
       }
     })
   }

@@ -1,9 +1,8 @@
-import { address, ABI } from './constants/tokenContract';
-import { address2, ABI2 } from './constants/usdcContract';
+import { address3, ABI3 } from './constants/tokenHandlerContract';
 import { ethers } from 'ethers';
 
 
-let getContract = new Promise(async function (resolve, reject) {
+let tokenHandleContract = new Promise(async function (resolve, reject) {
   let provider;
 
   try {
@@ -23,12 +22,10 @@ let getContract = new Promise(async function (resolve, reject) {
 
   const signer = await provider.getSigner();
   const signerAddress = await signer.getAddress();
+  const tokenHandler = new ethers.Contract(address3, ABI3, provider);
 
-  const fundContractInstance = new ethers.Contract(address, ABI, provider);
-  const daiContractInstance = new ethers.Contract(address2, ABI2, provider);
-
-  resolve([fundContractInstance, daiContractInstance]);
+  resolve(tokenHandler);
 
 })
 
-export default getContract;
+export default tokenHandleContract;

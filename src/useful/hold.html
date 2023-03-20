@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Flappy Bird Clone</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+    <style>
+        canvas {
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="">
+        const config = {
+            type: Phaser.AUTO,
+            width: 800,
+            height: 600,
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 200 }
+                }
+            },
+            scene: {
+                preload: preload,
+                create: create,
+                update: update
+            }
+        };
+
+        const game = new Phaser.Game(config);
+
+        let bird;
+        let pipes;
+        let score = 0;
+        let scoreText;
+
+        function preload() {
+            this.load.image('bird', 'assets/bird.png');
+            this.load.image('pipe', 'assets/pipe.png');
+        }
+
+        function create() {
+            bird = this.physics.add.sprite(100, 300, 'bird');
+            bird.setGravityY(-1000);
+
+            pipes = this.physics.add.group();
+            this.time.addEvent({ delay: 2000, callback: addPipes, callbackScope: this, loop: true });
+
+            scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#000' });
+        }
+
+        function update() {
+            if (bird.y > 600) {
+                gameOver();
+            }
+            bird.setAngle(0);
+            if (bird.body.velocity.y < 0) {
+                bird.setAngle(-10);
+            } else if (bird.body.velocity.y > 300) {
+                bird.setAngle(30);
+            }
+        }
+
+        function addPipes() {
+            const pipeHeight = Math.floor(Math.random() * 400) + 50;
+            const topPipe = pipes.create(800, 0, 'pipe');
+            topPipe.setOrigin(0, 1);
+            topPipe.setDisplaySize(80, pipeHeight);
+
+            const bottomPipe = pipes.create(800, 600, 'pipe');
+            bottomPipe.setOrigin(0, 0);
+            bottomPipe.setDisplaySize(80, 600 - pipeHeight - 200);
+
+            this.physics.add.overlap(bird, pipes, gameOver, null, this);
+
+            score += 10;
+            scoreText.setText('Score: ' + score);
+        }
+
+        function gameOver() {
+            this.physics.pause();
+            bird.setTint(0xff0000);
+            alert('Game Over!');
+        }
+
+    </script>
+</body>
+
+</html>

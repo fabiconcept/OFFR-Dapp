@@ -5,15 +5,6 @@ import { transferData } from '../../card/TranferTokens';
 const Confirmation = () => {
   const { transData } = useContext(transferData);
 
-  // useEffect(() => {
-  //   if (!buyTokenData.failed) {
-  //     setPending(true)
-  //     setTimeout(() => {
-  //       setPending(false)
-  //     }, 12000);
-  //   }
-  // }, [buyTokenData]);
-
   return (
     <div className="div-carosel c">
       {transData.status && <div className="con">

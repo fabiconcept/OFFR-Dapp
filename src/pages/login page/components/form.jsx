@@ -9,9 +9,8 @@ import { Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { getDataFromLogin } from '../../../store/reducers/userDetails';
 import getWeb3 from '../../../util/getWeb3';
-
+import ConnectionModal from "./connectionModal"
 const FormPart = () => {
-
     const emailRef = useRef();
     const nameRef = useRef();
     const checkBoxRef = useRef();
@@ -62,6 +61,9 @@ const FormPart = () => {
                                 break;
                         }
 
+                        const transactionDate = new Date();
+                        const timeStamp = transactionDate.toISOString().slice(0, 19).replace('T', ' ');
+
                         const userRef = collection(fireStore, "user_credentials");
 
 
@@ -70,7 +72,8 @@ const FormPart = () => {
                             email: emailRef.current.value,
                             gender: genderTxt,
                             profile_picture: dp(),
-                            wallet_Address: walletAddress
+                            wallet_Address: walletAddress,
+                            date: timeStamp,
                         });
                         setProceeding(false);
                         proceedHandler();

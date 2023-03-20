@@ -1,25 +1,26 @@
 import { ethers } from 'ethers';
 import React, { useContext, useEffect, useState } from 'react';
+import { toast } from 'react-hot-toast';
 import { formatNum, toEth } from '../../../../../useful/useful_tool';
-import { ABI, address } from '../../../../../util/constants/fundContract';
-import { walletData } from '../../../pages/Wallet';
+import { ABI, address } from '../../../../../util/constants/tokenContract';
+import { contextData } from '../../../dashboard';
 import { transferData } from '../../card/TranferTokens';
 
 const VerifyTransfer = () => {
     const { transData, setPending, setStatus, setCurrentPage } = useContext(transferData);
-    const { setTransactions, transactions } = useContext(walletData);
+    const { setTransactions, transactions, batchData } = useContext(contextData);
     const [bought, setBought] = useState(false);
     const [tempTransactionHolder, setTempTransactionHolder] = useState([]);
 
-    useEffect(()=>{
+    useEffect(() => {
         setTempTransactionHolder(transactions);
-    }, [transactions]);
+    }, [transactions]); 
 
-    useEffect(()=>{
+    useEffect(() => {
         if (tempTransactionHolder.length > 0) {
             setTransactions(tempTransactionHolder);
         }
-    },[tempTransactionHolder]);
+    }, [tempTransactionHolder]);
 
     const approveHandler = async () => {
         setPending(true);
@@ -41,40 +42,44 @@ const VerifyTransfer = () => {
             const timeStamp = transactionDate.toISOString().slice(0, 19).replace('T', ' ');
             let fromAddress;
 
-            await (signer.getAddress()).then((result)=>{
+            await (signer.getAddress()).then((result) => {
                 fromAddress = result;
-            })
+            });
 
-            const approvedTrasaction = {hash: approved.hash, type: 0, amount: value, from: fromAddress, timestamp:timeStamp };
-
-            if (approved) {
+            await approved.wait().then(async (i) => {
                 const to = transData.toAddress;
                 const sendTransfer = await OffrToken.transfer(to, value);
-                setTransactions([...tempTransactionHolder, approvedTrasaction, {hash: sendTransfer.hash, type: 2, amount: value, from: fromAddress, timestamp: timeStamp }]);
-                setBought(true);
-                setStatus(true);
-                setCurrentPage(4);
-            }
-
-            // Reset the usdc state to 0
+                await sendTransfer.wait().then(result => {
+                    setTransactions([...transactions, { hash: result.blockHash, type: 2, amount: value, from: fromAddress, timestamp: timeStamp, batch: batchData.batch_name }]);
+                    setBought(true);
+                    setStatus(true);
+                    setCurrentPage(4);
+                    setPending(false);
+                });
+            });
 
         } catch (error) {
-            const msg = error.reason;
-            const type = 2;
-            // Handle any errors that may occur when calling the buyTokens method
-            console.log(error);
             setCurrentPage(4);
             setBought(true);
             setStatus(false);
+            setPending(false);
+            throw error;
         }
-        setPending(false);
     };
 
-    useEffect(()=>{
+    useEffect(() => {
         setStatus(bought);
     }, [bought]);
 
 
+    const approveHandlerWatch = () =>{
+        const promise = approveHandler();
+        toast.promise(promise, {
+            loading: "Sending Tokens...",
+            success: "Tokens sent.",
+            error: "An error occurred",
+        })
+    }
 
 
     return (
@@ -103,7 +108,7 @@ const VerifyTransfer = () => {
             </section>
 
             <div className="r">
-                <div className="btnx" onClick={approveHandler}>Approve</div>
+                <div className="btnx" onClick={approveHandlerWatch}>Approve</div>
                 <div className="btnx c">Cancel</div>
             </div>
         </div>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { calculateTimeDifference } from '../../../../../useful/useful_tool';
 
 const TdTime = ({ timestamp }) => {

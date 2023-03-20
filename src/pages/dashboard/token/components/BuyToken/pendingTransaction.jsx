@@ -1,18 +1,17 @@
-import { ethers, Signer } from 'ethers';
+import { ethers } from 'ethers';
 import React, { useState } from 'react';
 import { useEffect } from 'react';
 import { useContext } from 'react';
 import { formatNumFreeStyle, moneyFormat, toEth } from '../../../../../useful/useful_tool';
-import { ABI2, address2 } from '../../../../../util/constants/daiContract';
-import { ABI, address } from '../../../../../util/constants/fundContract';
+import { ABI2, address2 } from '../../../../../util/constants/usdcContract';
 import { contextData } from '../../../dashboard';
-import { walletData } from '../../../pages/Wallet';
 import { buyData } from '../../card/BuyToken';
+import { ABI3, address3 } from '../../../../../util/constants/tokenHandlerContract';
+import { toast } from 'react-hot-toast';
 
 const PendingTransaction = () => {
-    const { setTransactions, transactions } = useContext(walletData);
     const { buyArr, setCurrentPage, setPending, setBuyTokenData, setApproved, currency} = useContext(buyData);
-    const { contract, coinBase } = useContext(contextData);
+    const { updateTokenSoldToBatchData, contract, coinBase, setTransactions, transactions, batchData } = useContext(contextData);
 
     const [offr, setOffr] = useState(null);
     const [coin, setCoin] = useState("");
@@ -26,6 +25,9 @@ const PendingTransaction = () => {
     }, [contract]);
 
 
+    /**
+     * If coinBase is true, then set the coinInfo state to the data object.
+     */
     const fetchOFFR = async () => {
 
         if (coinBase) {
@@ -33,8 +35,7 @@ const PendingTransaction = () => {
             const symbol = await offr.symbol();
             const max = await offr.totalSupply();
             const decimals = await offr.decimals();
-            const totalSupply = await offr.totalSupply();
-            const claimableAmountOf = await offr.claimableAmountOf(coinBase?.coinbase);
+            const totalSupply = await offr.totalSupply()
             const beneficiaryAddress = await offr._beneficiary();
             const myBalance = await offr.balanceOf(coinBase?.coinbase);
 
@@ -45,8 +46,7 @@ const PendingTransaction = () => {
                 decimals,
                 totalSupply,
                 beneficiaryAddress,
-                myBalance,
-                claimableAmountOf
+                myBalance
             }
 
             setCoinInfo(data);
@@ -62,21 +62,23 @@ const PendingTransaction = () => {
     useEffect(() => {
         switch (buyArr.crypto) {
             case 1:
-                setCoin("USDC")
+                setCoin("USDC");
                 break;
             case 2:
-                setCoin("ETH")
+                setCoin("ETH");
                 break;
 
             default:
                 break;
         }
     }, [buyArr]);
-    
-    // function weiNum(e){
-    //     return `${(e / (10**-18))}`
-    // }
 
+    /**
+     * It takes the amount of ETH the user wants to spend, and the amount of tokens they want to buy,
+     * and sends it to the contract. 
+     * 
+     * The contract then sends the tokens to the user, and sends the ETH to the contract owner. 
+     **/
     const handleBuyTokenEth = async () => {
         setPending(true);
 
@@ -91,8 +93,9 @@ const PendingTransaction = () => {
             const signer = await provider.getSigner();
 
             // Connect to the contract
-            const OffrToken = new ethers.Contract(address, ABI, signer);
-            const saleOpen = await OffrToken.tokensale_open();
+            const OffrTokenHandler = new ethers.Contract(address3, ABI3, signer);
+
+            const saleOpen = await OffrTokenHandler.tokensale_open();
             const value = toEth(amountETH.toFixed(8));
 
             const transactionDate = new Date();
@@ -101,22 +104,24 @@ const PendingTransaction = () => {
 
             await (signer.getAddress()).then((result)=>{
                 fromAddress = result;
-            })
+            });
 
             if (saleOpen) {
-                const BuyTokensTransaction = await OffrToken.buyTokens(toEth(amountOFFR), { 
+                const BuyTokensTransaction = await OffrTokenHandler.buyTokens(toEth(amountOFFR), { 
                     from: signer.getAddress(), 
                     value: value,
                 });
-                console.log(BuyTokensTransaction);
-                setTransactions([...transactions, {hash: BuyTokensTransaction.hash, type: 1, amount: toEth(amountOFFR), from: fromAddress, timestamp: timeStamp}]);
-                
-                const bal = formatNumFreeStyle(coinInfo.myBalance/(10**18));
-                const symbol = coinInfo.symbol
-                setBuyTokenData({amountOFFR, bal, symbol, failed: false});
-                setBought(true);
-            }
 
+                await BuyTokensTransaction.wait().then(i=>{
+                    setTransactions([...transactions, {hash: BuyTokensTransaction.hash,  type: 1, amount: toEth(amountOFFR), from: fromAddress, timestamp: timeStamp, batch: batchData.batch_name}]);
+                    updateTokenSoldToBatchData(toEth(amountOFFR));
+                    const bal = formatNumFreeStyle(coinInfo.myBalance/(10**18));
+                    const symbol = coinInfo.symbol;
+                    setBuyTokenData({amountOFFR, bal, symbol, failed: false});
+                    setBought(true);
+                });
+
+            }
             // Reset the usdc state to 0
  
         } catch (error) {
@@ -130,6 +135,22 @@ const PendingTransaction = () => {
         setPending(false);
     }
     
+    /**
+     * It takes the amount of USDC the user wants to spend, and the amount of tokens they want to buy,
+     * and then it calls the buyTokens() function on the contract.
+     * 
+     * The buyTokens() function is defined in the contract as follows:
+     * 
+     * function buyTokens(uint256 _usdcAmount) public payable {
+     *         require(tokensale_open);
+     *         require(msg.value == _usdcAmount);
+     *         require(msg.sender == usdc_address);
+     *         require(usdc_address.allowance(msg.sender) &gt;= _usdcAmount);
+     *         require(token_address.balanceOf(msg.sender) &lt;=
+     * token_address.balanceOf(address(this)));
+     * 
+     *         uint256 tokens = _usdcAmount.mul(token_price);
+     */
     const handleBuyTokenUSDC = async () => {
         setPending(true);
 
@@ -144,36 +165,42 @@ const PendingTransaction = () => {
             const signer = await provider.getSigner();
 
             // Connect to the contract
-            const OffrToken = new ethers.Contract(address, ABI, signer);
+            const OffrToken = new ethers.Contract(address3, ABI3, signer);
             const USDCInstance =  new ethers.Contract(address2, ABI2, signer);
+            
             const saleOpen = await OffrToken.tokensale_open();
             const value = toEth(amountUSDC.toFixed(8));
 
+            
             const transactionDate = new Date();
             const timeStamp = transactionDate.toISOString().slice(0, 19).replace('T', ' ');
             let fromAddress;
-
+            
             await (signer.getAddress()).then((result)=>{
                 fromAddress = result;
             });
 
-            if (saleOpen) {
-                const approveUSDC_Transaction = await USDCInstance.approve(address, (amountOFFR * (10**6)));
-                const BuyTokensTransaction = await OffrToken.buyTokens(amountOFFR, {
-                    from: fromAddress
+            if(saleOpen){
+                const approveUSDC_Transaction = await USDCInstance.approve(address3, value);
+
+                await approveUSDC_Transaction.wait().then(async()=>{
+                    const BuyTokensTransaction = await OffrToken.buyTokens(value, {
+                        from: fromAddress
+                    });
+
+                    await BuyTokensTransaction.wait().then((i)=>{
+                        setTransactions([...transactions, {hash: BuyTokensTransaction.hash, type: 1, amount: toEth(amountOFFR), from: fromAddress, timestamp: timeStamp, batch: batchData.batch_name}]);
+                        updateTokenSoldToBatchData(toEth(amountOFFR));
+                        const bal = formatNumFreeStyle(coinInfo.myBalance/(10**18));
+                        const symbol = coinInfo.symbol
+                        setBuyTokenData({amountOFFR, bal, symbol, failed: false});
+                        setBought(true);
+                    });
                 });
 
-
-                console.log({approveUSDC_Transaction, BuyTokensTransaction});
-
-                // setTransactions([...transactions, {hash: BuyTokensTransaction.hash, type: 1, amount: toEth(amountOFFR), from: fromAddress, timestamp: timeStamp}]);
-                
-                // const bal = formatNumFreeStyle(coinInfo.myBalance/(10**18));
-                // const symbol = coinInfo.symbol
-                // setBuyTokenData({amountOFFR, bal, symbol, failed: false});
-                // setBought(true);
             }
 
+            
             // Reset the usdc state to 0
  
         } catch (error) {
@@ -196,12 +223,25 @@ const PendingTransaction = () => {
 
 
 
+    /**
+     * If the user has selected a currency, then call the appropriate function to buy the token.
+     */
     const approveHandler = async () => {
         if (coinInfo && coinBase) {
             if (currency === 2) {
-                handleBuyTokenEth();
+                const buying = handleBuyTokenEth();
+                toast.promise(buying,{
+                    loading: "Purchasing Token",
+                    success: "Purchase Complete",
+                    error: 'An error occurred'
+                })
             }else if (currency === 1){
-                handleBuyTokenUSDC();
+                const buying = handleBuyTokenUSDC();
+                toast.promise(buying,{
+                    loading: "Purchasing Token",
+                    success: "Purchase Complete",
+                    error: 'An error occurred'
+                })
             }
         }
     }

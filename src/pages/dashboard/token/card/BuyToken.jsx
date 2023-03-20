@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useContext } from 'react';
 import { useEffect } from 'react';
+import { Toaster } from 'react-hot-toast';
 import { getCryptoPrice, isObjectEmpty } from '../../../../useful/useful_tool';
 import { contextData } from '../../dashboard';
 import CloseBTN from '../components/BuyToken/closeBTN';
@@ -9,10 +10,10 @@ import CurrencySelect from '../components/BuyToken/currencySelect';
 import PendingTransaction from '../components/BuyToken/pendingTransaction';
 import SetAmount from '../components/BuyToken/SetAmount';
 
-export const buyData = React.createContext()
+export const buyData = React.createContext();
 
 const BuyToken = ({ setBuying }) => {
-  const {coinBase} = useContext(contextData)
+  const {coinBase} = useContext(contextData);
   const [pending, setPending] = useState(false);
   const [toUsd, setToUsd] = useState(null);
   const [currency, setCurrency] = useState(0);
@@ -61,13 +62,10 @@ const BuyToken = ({ setBuying }) => {
     }
   }, [currentPage]);
 
-
-
-
-
   return (
     <buyData.Provider value={{ currency, toUsd, buyArr, setBuyArr, setCurrentPage, setBuying, setPending, setApproved, buyTokenData, setBuyTokenData }}>
       <div className="cover">
+        <Toaster />
         <div className="div wide">
           {currentPage !==2 && !pending && <CloseBTN control={setBuying}/>}
           {pending && <div className="pending">
@@ -75,12 +73,12 @@ const BuyToken = ({ setBuying }) => {
               <div><div></div><div></div><div></div><div></div><div></div><div></div></div>
             </div></div>
           </div>}
-          <div className="carosel">
+          {currentPage !== 3 && !buyTokenData.failed &&<div className="carosel">
             <div onClick={() => setCurrentPage(0)} className={`cnt ${currentPage === 0 && "active"}`}><div></div></div>
             <div onClick={() => setCurrentPage(1)} className={`cnt ${currentPage === 1 && "active"}`}><div></div></div>
             <div onClick={() => setCurrentPage(2)} className={`cnt ${currentPage === 2 && "active"}`}><div></div></div>
             <div onClick={() => setCurrentPage(3)} className={`cnt ${currentPage === 3 && "active"}`}><div></div></div>
-          </div>
+          </div>}
           {currentPage === 0 && <CurrencySelect setCurrency={setCurrency} currency={currency} />}
           {currentPage === 1 && currency !==0 && <SetAmount toUsd={toUsd} currency={currency} />}
           {currentPage === 2 && <PendingTransaction />}

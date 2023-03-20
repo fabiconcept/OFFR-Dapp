@@ -77,16 +77,25 @@ export function formatNum(params) {
 
 export function formatNumFreeStyle(params) {
   let num = params;
-  if (isBigNumber(params) || num > 1000000000) {
+  if (isBigNumber(params) || num > (10**19)) {
     num = (bigNum(params)) / (10 ** 18);
   }
   if (num > 1) {
     return bigNum(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   } else if (num > 0) {
-    return num.toFixed(18);
+    return parseFloat(num).toFixed(8);
   } else {
     return num;
   }
+}
+
+export function formatEth(params) {
+  let num = params;
+  if (isBigNumber(params) || num > (10**19)) {
+    num = (bigNum(params)) / (10 ** 18);
+  }
+  
+  return num;
 }
 
 export function destroySession() {
@@ -159,7 +168,7 @@ export const toEth = (e) =>{
 }
 
 export function interpretBigNumber(bigNumber) {
-  return parseInt(String(bigNumber.hex).slice(2), 16);
+    return parseInt(String(bigNumber.hex).slice(2), 16);
 }
 
 export function isValidEthAddress(address) {
@@ -170,15 +179,15 @@ export function isValidEthAddress(address) {
   return true;
 }
 
-export function pasteClipboard(div) {
+export function pasteClipboard(func) {
     navigator.clipboard.readText().then(text => {
-      div.value = text;
+      func(String(text).trim());
     });
 }
 
 export function calculateTimeDifference(givenTime) {
   const now = new Date();
-  const difference = now - new Date(givenTime);
+  const difference = now.getTime() - new Date(givenTime).getTime();
   const minute = 60 * 1000;
   const hour = minute * 60;
   const day = hour * 24;
@@ -200,5 +209,109 @@ export function calculateTimeDifference(givenTime) {
   }
 }
 
+export const getPercentage = (start, end) =>{
+  const startDate = start;
+  const endDate = end;
+  const now  = new Date();
 
-calculateTimeDifference();
+  const difference = endDate.getTime() - now.getTime();
+  const differenceInit = endDate.getTime() - startDate.getTime();
+
+  const percent = (100 -(100/differenceInit) * difference);
+
+  return (percent).toPrecision(2);
+}
+
+export function getDateDiff(startdate, enddate) {
+  // Get the difference between the two dates in milliseconds
+  const diffInMs = Math.abs(enddate - startdate);
+
+  // Convert the difference to days and hours
+  const days = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diffInMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+  // Construct the output string based on the days and hours difference
+  let output = "";
+  if (days > 0) {
+    output += days + " days ";
+  }else if (hours > 0) {
+    output += hours + " hrs ";
+  }
+  output += "Left";
+
+  return output;
+}
+
+export function formatLargeNumber(num) {
+  function roundToOneDecimalPlace(num) {
+    return Math.round(num * 10) / 10;
+  }
+
+  num = roundToOneDecimalPlace(num);
+
+  const suffixes = ['', 'k', 'M', 'B', 'T'];
+  let i = 0;
+  while (num >= 1000 && i < suffixes.length - 1) {
+    num /= 1000;
+    i++;
+  }
+
+  if (i === 2 && num >= 100) {
+    num = roundToOneDecimalPlace(num / 1000);
+    i++;
+  }
+
+  const precision = (i === 0) ? 0 : 1;
+  return `${num.toFixed(precision)}${suffixes[i]}`;
+}
+
+export function daysBetween(date1, date2) {
+  const oneDay = 24 * 60 * 60 * 1000; // Number of milliseconds in one day
+  const firstDate = new Date(date1);
+  const secondDate = new Date(date2);
+  const diffDays = Math.round(Math.abs((firstDate - secondDate) / oneDay));
+  return diffDays;
+}
+
+
+export function isNameValid(name) {
+  // Define a list of unaccepted strings to check against
+  const unacceptedStrings = ['<', '>', 'script', 'alert', 'eval'];
+
+  // Convert the input to lowercase for case-insensitive checking
+  const lowercaseName = name.toLowerCase();
+
+  // Check if the input contains any of the unaccepted strings
+  for (let i = 0; i < unacceptedStrings.length; i++) {
+      if (lowercaseName.includes(unacceptedStrings[i])) {
+          return false;
+      }
+  }
+
+  // If the input does not contain any unaccepted strings, return true
+  return true;
+}
+
+export function daysToText(days) {
+  const years = Math.floor(days / 365);
+  const months = Math.floor((days % 365) / 30);
+
+  if (years > 0 && months > 0) {
+    return `${years} year${years > 1 ? 's' : ''}, ${months} month${months > 1 ? 's' : ''}`;
+  } else if (years > 0) {
+    return `${years} year${years > 1 ? 's' : ''}`;
+  } else if (months > 0) {
+    return `${months} month${months > 1 ? 's' : ''}`;
+  } else {
+    return `${days} day${days > 1 ? 's' : ''}`;
+  }
+}
+
+export function formatPercentage(decimal) {
+  let percentage = Number(decimal);
+  if (percentage % 1 === 0) {
+    return percentage.toFixed(0) + '%';
+  } else {
+    return percentage.toFixed(2).replace(/\.?0+$/, '') + '%';
+  }
+}

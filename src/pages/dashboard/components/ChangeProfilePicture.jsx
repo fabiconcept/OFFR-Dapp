@@ -1,8 +1,9 @@
-import { collection, doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc } from 'firebase/firestore';
 import React from 'react';
 import { useEffect } from 'react';
 import { useContext } from 'react';
 import { useState } from 'react';
+import { toast, Toaster } from 'react-hot-toast';
 import { fireStore } from '../../../firebase/sdk';
 import { contextData } from '../dashboard';
 
@@ -56,15 +57,26 @@ const ChangeProfilePicture = ({ setSettingDp }) => {
         });
 
         setPending(false);
-        setSettingDp(false);
+        setTimeout(() => {
+            setSettingDp(false); 
+        }, 2000);
     }
 
+    const watchHandleClickFunc = (e) =>{
+        const promise = handleClick(e);
+        toast.promise(promise, {
+            loading: 'changing profile photo...',
+            success: 'Profile photo changed',
+            error: 'An error occurred',
+        });
+    } 
 
     return (
-        <div className="cover">
+        <div className="cover main">
+            <Toaster/>
             <div className="div">
                 {pending && <div className="pending">
-                    <div className="loadingio-spinner-gear-abqyc1i9wu"><div class="ldio-r68llg26yv">
+                    <div className="loadingio-spinner-gear-abqyc1i9wu"><div className="ldio-r68llg26yv">
                         <div><div></div><div></div><div></div><div></div><div></div><div></div></div>
                     </div></div>
                 </div>}
@@ -72,9 +84,9 @@ const ChangeProfilePicture = ({ setSettingDp }) => {
                 <div className="close" onClick={() => setSettingDp(false)}>x</div>
                 <section>
                     {images.map(i => (
-                        <div className="pic" key={i.id} onClick={() => handleClick(`${i.id}`)}>
+                        <div className="pic" key={i.id} onClick={() => watchHandleClickFunc(`${i.id}`)}>
                             <img src={i.img} alt="" />
-                            {i.selected && <div className="ck"><img src="img/icons/ck.png" alt="" /></div>}
+                            {i.selected && <div className="ck"><img src="https://gineousc.sirv.com/Images/icons/ck.png" alt="" /></div>}
                         </div>
                     ))}
                 </section>

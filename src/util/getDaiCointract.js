@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import {address2, ABI2} from './constants/daiContract'
+import {address2, ABI2} from './constants/usdcContract'
 
 
 let getDaiContract = new Promise(async function (resolve, reject) {

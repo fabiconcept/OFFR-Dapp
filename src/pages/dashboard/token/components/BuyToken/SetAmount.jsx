@@ -1,9 +1,7 @@
-import { ethers } from 'ethers';
 import React, { useEffect } from 'react';
 import { useContext } from 'react';
 import { useState } from 'react';
-import { formatNum, moneyFormat } from '../../../../../useful/useful_tool';
-import { ABI2 } from '../../../../../util/constants/daiContract';
+import { formatNum, formatNumFreeStyle, moneyFormat } from '../../../../../useful/useful_tool';
 import { contextData } from '../../../dashboard';
 import { buyData } from '../../card/BuyToken';
 
@@ -14,8 +12,6 @@ const SetAmount = () => {
     const [offr, setOffr] = useState(0);
     const [offrC, setOffrC] = useState(null);
     const [bal, setBal] = useState("");
-
-    
     const [coinInfo, setCoinInfo] = useState(null);
 
 
@@ -42,7 +38,7 @@ const SetAmount = () => {
         if (offrC !== null) {
             fetchOFFR();
         }
-    }, [offr, coinBase]);
+    }, [offr, coinBase, offrC]);
 
     const keyPressHandler = (e) => {
         let str = `${scr}${e}`;
@@ -114,37 +110,25 @@ const SetAmount = () => {
         }
     }, [scr]);
 
-
     const getUSDC = async() =>{
-        // Request the user's Ethereum accounts
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-
-        // Get the contract signer
-        const signer = await provider.getSigner();
-        const address = "0x07865c6E87B9F70255377e024ace6630C1Eaa37F";
-
-        // Connect to the contract
-        const USDC = new ethers.Contract(address, ABI2, signer);
-        const userBalance = await (USDC.balanceOf(coinBase.coinbase));
-        const decimals =  6*2;
-        const value = ethers.utils.formatEther(userBalance) * (10**decimals);
-        setBal(formatNum(value));
+        const userBalance = await contract[1].balanceOf(coinBase.coinbase);
+        setBal(Number(userBalance) / (10**18));
     }
 
     useEffect(()=>{
         if (currency === 1) {
             getUSDC();
         }else{
-            setBal((formatNum((coinBase.balance))));
+            setBal((formatNum(coinBase.balance)));
         }
-    }, [])
+    }, [contract]);
 
     return (
         <div className="div-carosel">
             <div className="calc">
                 <div className="tagger">
                     <div className="tag">
-                        {<span onClick={() => setMaxHandler(bal)}>{currency === 1 && "USDC"}{currency === 2 && "ETH"}: {bal}</span>}
+                        {<span onClick={() => setMaxHandler(bal)}>{currency === 1 && "USDC"}{currency === 2 && "ETH"}: {formatNumFreeStyle(bal)}</span>}
                     </div>
                 </div>
                 {offr !== "0" &&<div className="offr">~ It'll cost you <b>{moneyFormat((offr), 2)}</b> {`${toUsd && (currency === 1 ? 'USDC' : 'ETH')}`}.</div>}
