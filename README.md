@@ -19,6 +19,7 @@ To run OFFR Token Dapp locally on your machine, follow these simple steps
 ## Dependencies
 This Dapp was built using the following dependencies:
 
+- ethers.js
 - @reduxjs/toolkit
 - apexcharts
 - bootstrap
