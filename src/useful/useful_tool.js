@@ -63,7 +63,7 @@ export function bigNum(num) {
 
 export function formatNum(params) {
   let num = params;
-  if (isBigNumber(params) || num > 1000000000) {
+  if (isBigNumber(params) || num > 10000000000) {
     num = (bigNum(params)) / (10 ** 18);
   }
   if (num > 1) {

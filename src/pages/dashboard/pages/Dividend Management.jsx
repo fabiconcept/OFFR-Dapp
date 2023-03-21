@@ -5,35 +5,54 @@ import { contextData } from '../dashboard';
 import { ABI3, address3 } from '../../../util/constants/tokenHandlerContract';
 import DividendSettings from '../token/card/DividendSettings';
 import { ABI2, address2 } from '../../../util/constants/usdcContract';
+import { toast, ToastBar, Toaster } from 'react-hot-toast';
 
-export const ownerContext = React.createContext();
+export const dividendContext = React.createContext();
 const DividendManagement = () => {
-  const { storeDataUser, contract, coinBase } = useContext(contextData);
+  const { contract, coinBase, setTransactions, transactions } = useContext(contextData);
   const [dividendProperties, setDividendProperties] = useState(false);
   const [loading, setLoading] = useState(false);
   const [coin, setCoin] = useState(null);
+  const [updatedDividendProperties, setUpdatedDividendProperties] = useState(false);
+  const [startedDividendPeriod, setStartedDividendPeriod] = useState(false);
+
+  useEffect(()=>{
+    if (updatedDividendProperties) {
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    }
+  }, [updatedDividendProperties]);
+
+  useEffect(()=>{
+    if (startedDividendPeriod) {
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    }
+  }, [startedDividendPeriod]);
 
   const fetchCoinInformation = async () => {
     setLoading(true)
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     const signer = await provider.getSigner();
 
-    const OffrToken = new ethers.Contract(address3, ABI3, signer);
+    const tokenHandler = new ethers.Contract(address3, ABI3, signer);
     const usdcInstance = new ethers.Contract(address2, ABI2, signer);
 
     const token = contract[0];
 
-    const tokenSale = await OffrToken.tokensale_open();
+    const tokenSale = await tokenHandler.tokensale_open();
     let obj;
 
     const holdersList = await token.getHolderList();
     const totalSupply = formatEth(await token.totalSupply());
     const tokenCap = formatEth(await token.cap());
-    const divPeriod = Number(await OffrToken.getDividendPeriod());
-    const divInterval = Number(await OffrToken.getDividendInterval());
-    const divIntervalCount = Number(await OffrToken.getDividendIntervalCount());
-    const divCount = Number(await OffrToken.getDividendCount());
-    const divPercent = Number(await OffrToken.getDividendPercent());
+    const divPeriod = Number(await tokenHandler.getDividendPeriod());
+    const divInterval = Number(await tokenHandler.getDividendInterval());
+    const divIntervalCount = Number(await tokenHandler.getDividendIntervalCount());
+    const divCount = Number(await tokenHandler.getDividendCount());
+    const divPercent = Number(await tokenHandler.getDividendPercent());
 
     const divPeriodValue = (divPeriod / (24 * 60 * 60));
     const divIntervalValue = divInterval / (24 * 60 * 60);
@@ -41,8 +60,8 @@ const DividendManagement = () => {
     const divCountValue = divCount;
     const contractUSDC = await usdcInstance.balanceOf(address3);
 
-    const adminWallet = await OffrToken.getAdmin();
-    const isDividendPaymentPeriod = await OffrToken.isDividendPaymentPeriod();
+    const adminWallet = await tokenHandler.getAdmin();
+    const isDividendPaymentPeriod = await tokenHandler.isDividendPaymentPeriodActive();
 
     const isOwner = String(adminWallet).toLocaleLowerCase() === String(coinBase?.coinbase).toLocaleLowerCase();
 
@@ -66,6 +85,47 @@ const DividendManagement = () => {
     setLoading(false);
   };
 
+  const startDividendPaymentPeriod = async () => {
+    /* Creating a new instance of the Web3Provider. */
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    /* Getting the signer from the provider. */
+    const signer = await provider.getSigner();
+    /* Creating a new instance of the smart contract. */
+    const tokenHandler = new ethers.Contract(address3, ABI3, signer);
+    try {
+      const transactionDate = new Date();
+      const timeStamp = transactionDate.toISOString().slice(0, 19).replace('T', ' ');
+
+      let fromAddress;
+      /* Getting the address of the signer. */
+      await (signer.getAddress()).then((result) => {
+        fromAddress = result;
+      });
+
+      const startDividendPeriod = await tokenHandler.startDividendPeriod({
+        from: signer.getAddress()
+      });
+
+      await startDividendPeriod.wait().then(()=>{
+        setStartedDividendPeriod(true);
+      })
+
+    } catch (error) {
+      throw Error(`An error occurred: ${error}`);
+    }
+
+  }
+
+  const startDividendPaymentPeriodHandler = () =>{
+    const promise = startDividendPaymentPeriod();
+    
+    toast.promise(promise, {
+      loading: 'Starting the Dividend Payment Period.',
+      success: "🎉 Hurray! It's Dividend time.",
+      error: "An error occured"
+    });
+  }
+
   useEffect(() => {
     if (contract) {
       fetchCoinInformation();
@@ -73,21 +133,15 @@ const DividendManagement = () => {
   }, [contract, coinBase]);
 
   return (
-    <ownerContext.Provider value={{ dividendProperties, setDividendProperties }}>
+    <dividendContext.Provider value={{ dividendProperties, setDividendProperties, coin, setUpdatedDividendProperties }}>
       <div className="dash_section">
+        <Toaster />
         <label>Dividend Management</label>
         {loading && <div className="pending">
           <img src="https://gineousc.sirv.com/Images/sp.gif" alt="" />
         </div>}
-        {!storeDataUser && <div className="greet">
-          <div className="title">{greetUser()} {storeDataUser ? ((storeDataUser?.name).split(" ")[0]) : "@firstname"}, </div>
-          <div className="tags">
-            <div className="img">
-              {storeDataUser && <img src={storeDataUser?.dp} alt="" />}
-              {!storeDataUser && <img src="https://gineousc.sirv.com/Images/Infinite.gif" alt="" />}
-            </div>
-          </div>
-        </div>}
+
+        {dividendProperties && <DividendSettings />}
 
         <div className="dash-row">
           <div className="div-3">
@@ -113,24 +167,38 @@ const DividendManagement = () => {
             </div>
           </div>
 
-          {dividendProperties && <DividendSettings />}
 
           {/* You can use the disable class to disable some buttons */}
           <div className="btnx-row">
             <label>Action Buttons</label>
             <div className="row">
-              <div className="btnx">
-                Edit Dividend Data
-              </div>
-              <div className="btnx">
+              {coin && coin.isDividendPaymentPeriod && <div className="btnx disable" onClick={()=>setDividendProperties(true)}>
+                Edit Dividend Properties
+              </div>}
+              {coin && !coin.isDividendPaymentPeriod && <div className="btnx" onClick={()=>setDividendProperties(true)}>
+                Edit Dividend Properties
+              </div>}
+              {coin && coin.isDividendPaymentPeriod && <div className="btnx">
                 Fund Contract
-              </div>
-              <div className="btnx">
+              </div>}
+              {coin && !coin.isDividendPaymentPeriod && <div className="btnx disable">
+                Fund Contract
+              </div>}
+              {coin && coin.isDividendPaymentPeriod && <div className="btnx disable">
                 Start Dividend Period
-              </div>
-              <div className="btnx start">
+              </div>}
+              {coin && coin.status && <div className="btnx disable">
+                Start Dividend Period
+              </div>}
+              {coin && !coin.isDividendPaymentPeriod && !coin.status && <div className="btnx start" onClick={startDividendPaymentPeriodHandler}>
+                Start Dividend Period
+              </div>}
+              {coin && coin.isDividendPaymentPeriod && <div className="btnx start">
                 Pay Dividend
-              </div>
+              </div>}
+              {coin && !coin.isDividendPaymentPeriod && <div className="btnx disable">
+                Pay Dividend
+              </div>}
             </div>
           </div>
 
@@ -164,7 +232,7 @@ const DividendManagement = () => {
                     <span>Session paid</span>
                   </div>
                   <div>
-                    <span>{coin != null && coin.isDividendPaymentPeriod ? `${coin.divPercent > 0 ? (coin.divPercent * coin.divIntervalCountValue) : '0.00'}%` : `---`}</span>
+                    <span>{coin != null && coin.isDividendPaymentPeriod ? `$${coin.divPercent > 0 ? formatNum(((coin.divPercent * (coin.divIntervalCountValue-1))/100) * coin.totalSupply) : '0.00'}` : `---`}</span>
                     <span>Total Accumulated Dividend</span>
                   </div>
                 </div>
@@ -199,7 +267,7 @@ const DividendManagement = () => {
           </div>
         </div>
       </div>
-    </ownerContext.Provider>
+    </dividendContext.Provider>
   )
 }
 

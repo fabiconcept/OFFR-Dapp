@@ -1,11 +1,13 @@
+import { ethers } from 'ethers';
 import React, { useContext, useEffect, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
+import { ABI3, address3 } from '../../../../util/constants/tokenHandlerContract';
 import { ownerContext } from '../../pages/Owner';
-import Confirmation from '../components/Token Sale/confirmation';
-import Dividend from '../components/Token Sale/dividend';
-import DividendAmount from '../components/Token Sale/dividendAmount';
-import SetDate from '../components/Token Sale/SetDate';
-import VerifyStart from '../components/Token Sale/verifyStart';
+import Confirmation from '../components/Start Token Sale/confirmation';
+import Dividend from '../components/Start Token Sale/dividend';
+import DividendAmount from '../components/Start Token Sale/dividendAmount';
+import SetDate from '../components/Start Token Sale/SetDate';
+import VerifyStart from '../components/Start Token Sale/verifyStart';
 
 export const tokenSaleContext = React.createContext();
 const StartTokenSale = () => {
@@ -31,7 +33,29 @@ const StartTokenSale = () => {
         _step2: false,
         _step3: false,
         _step4: false
-    });
+    }); 
+
+    const [dividendProperties, setDividendProperties] = useState(null);
+
+    const fetchTokenHandlerInfo = async()=>{
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+
+        const signer = await provider.getSigner();
+
+        /* Creating a new instance of the smart contract. */
+        const tokenHandler = new ethers.Contract(address3, ABI3, signer);
+        console.log(tokenHandler);
+
+        const dividendInterval = Number(await tokenHandler.getDividendInterval());
+        const dividendPercent = Number(await tokenHandler.getDividendPercent());
+        const dividendPeriod = Number(await tokenHandler.getDividendPeriod());
+
+        setDividendProperties({dividendInterval, dividendPercent, dividendPeriod});
+    }
+
+    useEffect(()=>{
+        fetchTokenHandlerInfo();
+    },[]);
 
     useEffect(() => {
         if (dates !== null) {
@@ -61,7 +85,7 @@ const StartTokenSale = () => {
     }
 
     return (
-        <tokenSaleContext.Provider value={{ dividendIntializationPeriodTime, setDividendIntializationPeriodTime, dividendPercentage, divData, setDivData, setDividendPercentage, setPending, dividend, setDividends, batchNameTxt, setBatchNameTxt, dates, setDates, transactionStatus, setTransactionStatus, setCurrentPage }}>
+        <tokenSaleContext.Provider value={{ dividendProperties, dividendIntializationPeriodTime, setDividendIntializationPeriodTime, dividendPercentage, divData, setDivData, setDividendPercentage, setPending, dividend, setDividends, batchNameTxt, setBatchNameTxt, dates, setDates, transactionStatus, setTransactionStatus, setCurrentPage }}>
             <div className="cover">
                 <Toaster/>
                 <div className="div wide">
@@ -74,13 +98,13 @@ const StartTokenSale = () => {
                     <div className="title">Token Sale Information</div>
                     {transactionStatus !== true && <div className="carosel">
                         {<div onClick={() => setCurrentPage(0)} className={`cnt ${currentPage === 0 && "active"} ${steps._step1 && "good"}`}><div></div></div>}
-                        {steps._step1 && <div onClick={() => setCurrentPage(1)} className={`cnt ${currentPage === 1 && "active"} good`}><div></div></div>}
-                        {steps._step3 && <div onClick={() => setCurrentPage(2)} className={`cnt ${currentPage === 2 && "active"} good`}><div></div></div>}
+                        {dividendProperties?.dividendPeriod === 0 && steps._step1 && <div onClick={() => setCurrentPage(1)} className={`cnt ${currentPage === 1 && "active"} good`}><div></div></div>}
+                        {dividendProperties?.dividendPeriod === 0 && steps._step3 && <div onClick={() => setCurrentPage(2)} className={`cnt ${currentPage === 2 && "active"} good`}><div></div></div>}
                         {steps._step3 && <div onClick={() => setCurrentPage(3)} className={`cnt ${currentPage === 3 && "active"} good`}><div></div></div>}
                     </div>}
                     {currentPage == 0 && <SetDate />}
-                    {currentPage == 1 && <Dividend />}
-                    {currentPage == 2 && <DividendAmount />}
+                    {dividendProperties?.dividendPeriod === 0 && currentPage == 1 && <Dividend />}
+                    {dividendProperties?.dividendPeriod === 0 && currentPage == 2 && <DividendAmount />}
                     {currentPage == 3 && <VerifyStart />}
                     {currentPage == 4 && <Confirmation />}
                     {currentPage <= 3 && <div className="next">

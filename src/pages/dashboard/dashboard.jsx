@@ -16,6 +16,8 @@ import Wallet from './pages/Wallet';
 import Owner from './pages/Owner';
 import DividendManagement from './pages/Dividend Management';
 import SaleBatches from './pages/SaleBatches';
+import { ethers } from 'ethers';
+import { ABI3, address3 } from '../../util/constants/tokenHandlerContract';
 
 export const contextData = React.createContext();
 
@@ -50,6 +52,11 @@ const Dashboard = () => {
    * 'batchData'.
    */
   const fetchActiveSalesBatch = async() =>{
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = await provider.getSigner();
+
+    const tokenHandler = new ethers.Contract(address3, ABI3, signer);
+    console.log(await tokenHandler.getTokenBatchName());
     const collectionSnap = await getDocs(collection(fireStore, "Token_Sale_Batches"));
     
     collectionSnap.forEach(element => {

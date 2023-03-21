@@ -1,4 +1,4 @@
-const address = '0x70cFbb9882F3d8E33ec30871F8653568DbD71B03';
+const address = '0x24BDB45ebC662223deb9745cbF1f0C7632541824';
 
 const ABI = [
 	{
@@ -250,25 +250,7 @@ const ABI = [
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "sender",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "tokens",
-				"type": "uint256"
-			}
-		],
-		"name": "addBalance",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "newHolder",
+				"name": "holder",
 				"type": "address"
 			}
 		],
@@ -386,13 +368,6 @@ const ABI = [
 			}
 		],
 		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "closeContract",
-		"outputs": [],
-		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{

@@ -1,6 +1,7 @@
 import { collection, getDocs } from 'firebase/firestore';
 import React, { useContext, useEffect, useState } from 'react';
 import { fireStore } from '../../../firebase/sdk';
+import { formatNum } from '../../../useful/useful_tool';
 import { contextData } from '../dashboard';
 import TdTime from '../token/components/transsactions/TdTime';
 import Td from '../token/components/transsactions/TdType';
@@ -89,7 +90,7 @@ const TransactionHashs = ({methods, maxL}) => {
                             <td className='ad'><a href={`https://sepolia.etherscan.io/tx/${transaction.hash}`} target="_blank" rel="noopener noreferrer">{transaction.hash}</a></td>
                             <td className='ad mb'>{transaction.from}</td>
                             <Td type={(transaction.type)} />
-                            <td className='amt'>{transaction.type === 1 ? (Number((transaction.amount / (10 ** 18)).toFixed(2)).toLocaleString()): `${(Number(transaction.amount))} gwei`}</td>
+                            <td className='amt'>{transaction.type <= 2 ? (Number((transaction.amount / (10 ** 18)).toFixed(2)).toLocaleString()): `${formatNum(Number(transaction.amount))} gwei`}</td>
                             <TdTime timestamp={(transaction.timestamp)} />
                         </tr>
                     ))}

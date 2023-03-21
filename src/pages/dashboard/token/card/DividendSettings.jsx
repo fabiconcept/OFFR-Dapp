@@ -1,35 +1,43 @@
 import React, { useContext, useState } from 'react';
-import { ownerContext } from '../../pages/Dividend Management';
+import { Toaster } from 'react-hot-toast';
+import { contextData } from '../../dashboard';
+import { dividendContext } from '../../pages/Dividend Management';
+import Confirmation from '../components/Dividend Properties Setting/confirmation';
+import Setting from '../components/Dividend Properties Setting/Setting';
 
-export const dividendContext = React.createContext();
+export const dividendPropertiesSettingContext = React.createContext();
 const DividendSettings = () => {
-    const { setDividendProperties } = useContext(ownerContext);
+    const { setDividendProperties, coin, setUpdatedDividendProperties } = useContext(dividendContext);
+    const { setTransactions, transactions, batchNameTxt } = useContext(contextData);
     const [pending, setPending] = useState(false);
+    const [updateStatus, setUpdateStatus] = useState(false);
     const [currentPage, setCurrentPage] = useState(0);
-    const [canProceed, setCanProceed] = useState(false);
-    const [transactionStatus, setTransactionStatus] = useState(false);
-    const [steps, setSteps] = useState({
-        _step1: false,
-        _step2: false,
-        _step3: false,
-        _step4: false
-    });
+
+    function closeButtonHandler() {
+        setDividendProperties(false);
+        updateStatus && setUpdatedDividendProperties(true);
+    }
 
     return (
-        <dividendContext.Provider value={{setPending, setCurrentPage}}>
+        <dividendPropertiesSettingContext.Provider value={{ pending, currentPage, updateStatus, setTransactions, transactions, batchNameTxt, setPending, coin, setCurrentPage, setUpdateStatus }}>
             <div className="cover">
-                <div className="div"> 
+                <Toaster/>
+                <div className="div wide">
                     {pending && <div className="pending">
                         <div className="loadingio-spinner-gear-abqyc1i9wu"><div className="ldio-r68llg26yv">
                             <div><div></div><div></div><div></div><div></div><div></div><div></div></div>
                         </div></div>
                     </div>}
-                    {!pending && <div className="close" onClick={()=>setDividendProperties(false)}>x</div>}
-                    <div className="title">Dividend Properties</div>
+                    {!pending && <div className="close" onClick={closeButtonHandler}>x</div>}
+                    {currentPage == 0 && <div className="title">Dividend Properties</div>}
+                    <div className="carosel">
+                        {currentPage == 0 && <Setting />}
+                        {currentPage == 1 && <Confirmation/>}
+                    </div>
                 </div>
             </div>
-        </dividendContext.Provider>
-    )
+        </dividendPropertiesSettingContext.Provider>
+    );
 }
 
 export default DividendSettings;

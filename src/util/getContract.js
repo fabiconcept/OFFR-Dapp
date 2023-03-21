@@ -22,10 +22,10 @@ let getContract = new Promise(async function (resolve, reject) {
   await provider?.send("eth_requestAccounts", []);
 
   const signer = await provider.getSigner();
-  const signerAddress = await signer.getAddress();
 
-  const fundContractInstance = new ethers.Contract(address, ABI, provider);
-  const daiContractInstance = new ethers.Contract(address2, ABI2, provider);
+
+  const fundContractInstance = new ethers.Contract(address, ABI, signer);
+  const daiContractInstance = new ethers.Contract(address2, ABI2, signer);
 
   resolve([fundContractInstance, daiContractInstance]);
 

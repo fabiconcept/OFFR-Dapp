@@ -72,7 +72,7 @@ const DividendAmount = () => {
                 </div>
                 <label>Dividend Percent</label>
                 <div className={`inp-box`}>
-                    <input type="number" value={amount} min={0.25} step={0.25} onChange={(e)=>setAmount(e.target.value)} name="" placeholder='100% = 1000' id="" className="inp" />
+                    <input type="number" value={amount}  onChange={(e)=>setAmount(Number(e.target.value <= 100 ? e.target.value : 1))} name="" placeholder='100%' id="" className="inp" />
                 </div>
             </div>
             <br />

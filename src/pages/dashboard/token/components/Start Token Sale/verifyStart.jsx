@@ -1,15 +1,15 @@
 import { ethers } from 'ethers';
 import { collection, doc, setDoc } from 'firebase/firestore';
-import React, { useContext, useEffect } from 'react';
+import React, { useContext } from 'react';
 import { toast } from 'react-hot-toast';
 import { fireStore } from '../../../../../firebase/sdk';
-import { daysBetween, daysToText } from '../../../../../useful/useful_tool';
+import { daysBetween } from '../../../../../useful/useful_tool';
 import { ABI3, address3 } from '../../../../../util/constants/tokenHandlerContract';
 import { contextData } from '../../../dashboard';
 import { tokenSaleContext } from '../../card/startTokenSale';
 
 const VerifyStart = () => {
-    const { setTransactions, transactions, batchData } = useContext(contextData);
+    const { setTransactions, transactions } = useContext(contextData);
     const {dates, setPending, setTransactionStatus, setCurrentPage, dividendIntializationPeriodTime, dividendPercentage, dividend, batchNameTxt,} = useContext(tokenSaleContext);
 
     
@@ -17,7 +17,8 @@ const VerifyStart = () => {
      * This function saves the data to the database.
      */
     const saveTokenSaleBatch = async(hash) =>{
-        const userRef = collection(fireStore, `Token_Sale_Batches`);
+        const batchRef = collection(fireStore, `Token_Sale_Batches`);
+        const divRef = collection(fireStore, `Dividend_data`);
 
         const startVal= new Date(dates.start).getTime();
         const endVal= new Date(dates.end).getTime();
@@ -28,6 +29,9 @@ const VerifyStart = () => {
             endDate: endVal,
             sold: 0,
             status: true,
+        }
+
+        const divObject = {
             DividendPeriod: ((parseFloat(dividend.period)) / (24 * 60 * 60)),
             DividendIntervals: ((parseFloat(dividend.interval)) / (24 * 60 * 60)),
             DividendsPercent: dividendPercentage,
@@ -35,7 +39,8 @@ const VerifyStart = () => {
         }
 
         /* Saving the data to the database. */
-        await setDoc(doc(userRef, `${hash}`), db_data);
+        await setDoc(doc(batchRef, `${hash}`), db_data);
+        dividendPercentage > 0 && await setDoc(doc(divRef, `${hash}`), divObject);
     }
 
     /**
@@ -66,7 +71,7 @@ const VerifyStart = () => {
             });
             
             /* Calling the `startSale` function in the smart contract. */
-            const startTokenSale = await tokenHandler.startSale(startVal, endVal, {
+            const startTokenSale = await tokenHandler.startSale(startVal, endVal, batchNameTxt, {
                 from: signer.getAddress(),
             });
 
@@ -77,21 +82,12 @@ const VerifyStart = () => {
                 await saveTokenSaleBatch(result.transactionHash);
             });
 
-            /* Calling the `setDividendPeriod` function in the smart contract. */
-            await tokenHandler.setDividendPeriod(dividend.period, {
-                from: signer.getAddress(),
-            });
-
-            await tokenHandler.setDividendInterval(dividend.interval, {
-                from: signer.getAddress(),
-            });
-
-            const setDividendPercentage = await tokenHandler.setDividendPercent((dividendPercentage * 1000), {
+            const setDividendProperties = await tokenHandler.setDividendProperties(dividend.period, dividend.interval, (dividendPercentage * 1000), {
                 from: signer.getAddress(),
             });
 
             /* Setting the transaction status to true and setting the current page to 4. */
-            await setDividendPercentage.wait().then(async()=>{
+            await setDividendProperties.wait().then(async()=>{
                 setTransactionStatus(true);
                 setCurrentPage(4);
             });
@@ -110,11 +106,11 @@ const VerifyStart = () => {
      * promise is pending. The success property is the message that will be displayed when the promise
      * resolves. The error property is the message that will be displayed when the promise rejects.
      */
-    const startHandler =()=>{
+    const startHandler = () =>{
         const promise = startHandlerHandler();
         toast.promise(promise,{
             loading: "Processing, This could take a few miuntes.",
-            success: "You've successfully Started Token Sale",
+            success: "✨ Hurray! Sale date set.",
             error: 'An error occurred'
         })
     }
@@ -134,18 +130,18 @@ const VerifyStart = () => {
                     <span>Sales Duration: </span>
                     <span>{daysBetween(dates.start, dates.end)} Days</span>
                 </div>
-                <div>
+                {dividendPercentage > 0 && <div>
                     <span>dividend Percentage: </span>
                     <span>{(parseFloat(dividendPercentage)).toFixed(2)}%</span>
-                </div>
-                <div>
+                </div>}
+                {dividend.period > 0 && <div>
                     <span>Period: </span>
                     <span>{(parseFloat(dividend.period)) / (24 * 60 * 60)} Days</span>
-                </div>
-                <div>
+                </div>}
+                {dividend.interval > 0 && <div>
                     <span>Intervals: </span>
                     <span>{(parseFloat(dividend.interval)) / (24 * 60 * 60)} Days</span>
-                </div>
+                </div>}
             </section>
 
             <div className="r">

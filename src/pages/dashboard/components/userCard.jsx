@@ -29,9 +29,9 @@ const UserCard = ({ setSettingDp }) => {
 
         setTokenSaleEnded(await tokenHandler.isDividendPaymentPeriodActive());
         setDividendPercent(Number(await tokenHandler.getDividendPercent()));
-
+        // console.log(tokenHandler);
         const dat1 = (new Date(Number(await tokenHandler.startTimestamp())));
-        const dat2 = (new Date(Number(await tokenHandler.saleEndDate())));
+        const dat2 = (new Date(Number(await tokenHandler.getSaleEndDate())));
 
         const value = userBalance / (10**18);
         setUsdc(formatNum(value));

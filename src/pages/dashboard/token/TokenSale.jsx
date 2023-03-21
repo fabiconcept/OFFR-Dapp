@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import React, { useContext, useEffect, useState } from 'react';
-import { bigNum, formatNum } from '../../../useful/useful_tool';
+import { bigNum, formatNum, formatPercentage } from '../../../useful/useful_tool';
 import { address } from '../../../util/constants/tokenContract';
 import { ABI3, address3 } from '../../../util/constants/tokenHandlerContract';
 import { contextData } from '../dashboard';
@@ -113,23 +113,23 @@ const TokenSale = ({buyRef, transferRef}) => {
             {buying && <BuyToken setBuying={setBuying} />}
             {transfering && <TranferTokens setTransfering={setTransfering}/>}
             <div className="sec">
-                <div className="p">Token Sale</div>
+                <span>Token Sale</span>
                 <div className="s">{coinInfo ? `${coinInfo.tokenSale ? coinInfo.txtEndDate: "Sale Has Ended"}` : "-- --- ---"}</div>
             </div>
 
             <div className="sec st">
                 <section>
-                    <div className="p">Max Supply</div>
+                    <span>Max Supply</span>
                     <div className="m">{formatNum(coinInfo?.cap)}</div>
                 </section>
                 <section>
-                    <div className="p">Total Supply</div>
+                    <span>Total Supply</span>
                     <div className="m">{formatNum(coinInfo?.totalSupply)}</div>
                 </section>
             </div>
 
             <div className="rng">
-                <div className="ld" data-hover={`${((100/(coinInfo?.cap)) * (coinInfo?.totalSupply)).toFixed(8)}%`} style={{width: `${(100/(coinInfo?.cap)) * (coinInfo?.totalSupply)}%`}}></div>
+                <div className="ld" data-hover={`${formatPercentage(((100/(coinInfo?.cap)) * (coinInfo?.totalSupply)).toFixed(8))}`} style={{width: `${(100/(coinInfo?.cap)) * (coinInfo?.totalSupply)}%`}}></div>
             </div>
             
             <Clock endDate={coinInfo ? `${coinInfo.tokenSale ? coinInfo.txtEndDate: null}` : null} />
