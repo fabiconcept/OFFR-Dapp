@@ -35,7 +35,7 @@ This Dapp was built using the following dependencies:
 
 - [Project Website](https://projectUrl.com)
 - [Token Website](https://tokenUrl.com)
-- [Offer Clocud Website](https://offercloudUrl.com)
+- [OFFR Cloud Website](https://offrcloudUrl.com)
 - [Developer Website](https://developerUrl.com)
 
 
